@@ -9,3 +9,4 @@ dist/
 out/
 .vercel
 .env.example
+.vercel
