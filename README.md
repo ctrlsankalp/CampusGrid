@@ -1,3 +1,5 @@
+[🚀 Live Demo](https://campus-grid-ak9b.vercel.app)
+
 # CampusGrid — Campus Resource Governance System
 
 CampusGrid is a full-stack campus resource management platform for booking, monitoring, and governing shared rooms, equipment, and other campus resources.
