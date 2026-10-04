@@ -45,11 +45,29 @@ export default function ResourceBookingsPage() {
   const [statusFilter, setStatusFilter] = useState("");
   const [createModal, setCreateModal] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [form, setForm] = useState({
-    title: "", description: "", resourceId: "", date: "", startHour: "09", endHour: "17",
+  const [form, setForm] = useState(() => {
+    const today = new Date().toISOString().split("T")[0];
+    return {
+      title: "", description: "", resourceId: "", date: today, startHour: "09", endHour: "17",
+    };
   });
 
-  useEffect(() => { fetchBookings(); fetchResources(); }, [statusFilter]);
+  useEffect(() => {
+    if (user) {
+      fetchBookings();
+      fetchResources();
+    }
+  }, [user, statusFilter]);
+
+  function openCreateModal() {
+    const today = new Date().toISOString().split("T")[0];
+    setForm((prev) => ({
+      ...prev,
+      date: prev.date || today,
+    }));
+    fetchResources();
+    setCreateModal(true);
+  }
 
   async function fetchBookings() {
     setLoading(true);
@@ -66,7 +84,7 @@ export default function ResourceBookingsPage() {
 
   async function fetchResources() {
     try {
-      const res = await fetch("/api/resources?pageSize=50");
+      const res = await fetch("/api/resources?pageSize=100");
       const data = await res.json();
       if (data.success) {
         setResources(data.data.filter((r: Resource) => r.type === "EQUIPMENT" || r.type === "ASSET"));
@@ -76,13 +94,27 @@ export default function ResourceBookingsPage() {
 
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault();
+    if (!form.resourceId) {
+      toast("error", "Please select a resource");
+      return;
+    }
+    if (!form.date) {
+      toast("error", "Please select a date");
+      return;
+    }
+    if (Number(form.startHour) >= Number(form.endHour)) {
+      toast("error", "Return time must be after pickup time");
+      return;
+    }
     setSubmitting(true);
     try {
       const res = await fetch("/api/bookings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          title: form.title, description: form.description, resourceId: form.resourceId,
+          title: form.title,
+          description: form.description || undefined,
+          resourceId: form.resourceId,
           startTime: `${form.date}T${form.startHour}:00:00`,
           endTime: `${form.date}T${form.endHour}:00:00`,
         }),
@@ -91,12 +123,17 @@ export default function ResourceBookingsPage() {
       if (data.success) {
         toast("success", data.data.status === "WAITLISTED" ? "Added to waitlist" : "Resource reserved!");
         setCreateModal(false);
-        setForm({ title: "", description: "", resourceId: "", date: "", startHour: "09", endHour: "17" });
+        const today = new Date().toISOString().split("T")[0];
+        setForm({ title: "", description: "", resourceId: "", date: today, startHour: "09", endHour: "17" });
         fetchBookings();
       } else {
-        toast("error", data.error);
+        toast("error", data.error || "Failed to reserve resource");
       }
-    } catch { toast("error", "Failed to reserve resource"); } finally { setSubmitting(false); }
+    } catch {
+      toast("error", "Failed to reserve resource");
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   async function cancelBooking(id: string) {
@@ -128,7 +165,7 @@ export default function ResourceBookingsPage() {
               <option value="CANCELLED">Cancelled</option>
             </select>
           </div>
-          <button onClick={() => setCreateModal(true)} className="btn-primary">
+          <button onClick={() => openCreateModal()} className="btn-primary">
             <Plus className="h-4 w-4 mr-2" /> Reserve Resource
           </button>
         </div>
@@ -138,7 +175,7 @@ export default function ResourceBookingsPage() {
             title="No resource reservations"
             description="Reserve equipment or assets for your events and projects."
             icon={<PackageSearch className="h-8 w-8 text-gray-400" />}
-            action={<button onClick={() => setCreateModal(true)} className="btn-primary">Reserve Resource</button>}
+            action={<button onClick={() => openCreateModal()} className="btn-primary">Reserve Resource</button>}
           />
         ) : (
           <div className="space-y-3">

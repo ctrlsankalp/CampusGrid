@@ -61,9 +61,9 @@ export function canBookResource(user: UserForBooking, resource: ResourceForBooki
   if (ADMIN_ROLES.includes(user.role)) return true;
   if (LAB_ROLES.includes(user.role)) return false;
   if (user.role === "LHC") return false;
-  if (user.role === "STUDENT") return resource.departmentId != null || resource.clubId != null;
+  if (user.role === "STUDENT") return true;
   if (user.role === "PROFESSOR") return resource.departmentId != null && resource.clubId == null;
-  if (CLUB_HEAD_ROLES.includes(user.role)) return resource.departmentId != null || resource.clubId != null;
+  if (CLUB_HEAD_ROLES.includes(user.role)) return true;
   return false;
 }
 

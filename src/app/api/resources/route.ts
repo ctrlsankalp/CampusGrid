@@ -14,14 +14,20 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url);
     const page = Math.max(1, Number(searchParams.get("page")) || 1);
-    const pageSize = Math.min(50, Math.max(1, Number(searchParams.get("pageSize")) || 20));
+    const pageSize = Math.min(100, Math.max(1, Number(searchParams.get("pageSize")) || 20));
     const type = searchParams.get("type");
     const search = searchParams.get("search");
     const departmentId = searchParams.get("departmentId");
     const clubId = searchParams.get("clubId");
 
     const where: Record<string, unknown> = { isActive: true };
-    if (type) where.type = type;
+    if (type) {
+      if (type.includes(",")) {
+        where.type = { in: type.split(",") };
+      } else {
+        where.type = type;
+      }
+    }
 
     if (user.role === "PROFESSOR") {
       // Professors see dept resources only (no club-only resources), rooms are unrestricted

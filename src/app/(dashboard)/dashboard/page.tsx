@@ -78,7 +78,10 @@ export default function DashboardPage() {
             <div className="card">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-base font-semibold text-gray-900">Recent Bookings</h3>
-                <Link href="/bookings" className="text-sm font-medium text-brand-600 hover:text-brand-700">
+                <Link
+                  href={user.role === "STUDENT" ? "/resource-bookings" : "/room-bookings"}
+                  className="text-sm font-medium text-brand-600 hover:text-brand-700"
+                >
                   View all
                 </Link>
               </div>

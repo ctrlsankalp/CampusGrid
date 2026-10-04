@@ -79,8 +79,8 @@ export async function GET(request: NextRequest) {
           endTime: b.endTime.toISOString(),
           status: b.status,
           resourceId: b.resourceId,
-          userId: b.user.id,
-          userName: b.user.name,
+          userId: b.user?.id ?? b.userId,
+          userName: b.user?.name ?? "Unknown",
         })),
       },
     });
